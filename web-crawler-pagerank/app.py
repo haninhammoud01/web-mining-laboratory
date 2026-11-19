@@ -228,7 +228,8 @@ with st.sidebar:
                            help="Batas agar satu domain tidak mendominasi hasil.")
     delay = st.slider("Jeda antar request (detik)", 0.2, 3.0, 0.8, step=0.1)
     max_seconds = st.slider("Batas waktu crawl (detik)", 30, 180, 90, step=10)
-    respect_robots = st.checkbox("Patuhi robots.txt", value=True)
+    respect_robots = st.checkbox("Patuhi robots.txt", value=False,
+                                 help="Default nonaktif agar bisa crawl website apapun. Aktifkan untuk crawling sopan ke website besar.")
     restrict_seed = st.checkbox("Batasi ke domain seed", value=False,
                                 help="Hanya crawl domain yang sama dengan seed URL.")
     weighted = st.checkbox("Edge weight = jumlah tautan", value=True)
@@ -436,10 +437,22 @@ tab_graph, tab_rank, tab_metrics, tab_export = st.tabs([
 # --- Tab 1: Graf Interaktif ---
 with tab_graph:
     n_total = G.number_of_nodes()
-    top_n_default = min(20, n_total) if n_total > 0 else 10
-    top_n = st.slider("Jumlah node ditampilkan (top PageRank)", 5, max(5, n_total), top_n_default) if n_total > 5 else n_total
+    top_n_default = min(30, n_total) if n_total > 0 else 10
+    if n_total > 5:
+        col_slider, col_info = st.columns([3, 2])
+        with col_slider:
+            top_n = st.slider(
+                "Jumlah node ditampilkan (top PageRank)",
+                5, max(5, n_total), top_n_default,
+                help="Node dengan PageRank tertinggi akan ditampilkan. Node kuning = seed."
+            )
+        with col_info:
+            st.caption(f"Total domain ditemukan: {n_total} - menampilkan top {top_n}")
+    else:
+        top_n = n_total
+        st.caption(f"Total domain: {n_total}")
 
-    # Build pyvis network
+    # Build pyvis network (force-directed, mirip citationgraph.org)
     from pyvis.network import Network
 
     keep_nodes = {row["node"] for _, row in metrics_df.head(top_n).iterrows()} | {seed}
@@ -449,49 +462,139 @@ with tab_graph:
         pr_max = max(pr[n] for n in H) or 1.0
         pr_min = min(pr[n] for n in H)
 
-        net = Network(height="600px", width="100%", directed=True,
-                      bgcolor="#0b0f17" if st.session_state["theme_dark"] else "#ffffff",
-                      font_color="#e6edf3" if st.session_state["theme_dark"] else "#0f172a",
-                      cdn_resources="in_line")
+        net = Network(
+            height="650px",
+            width="100%",
+            directed=True,
+            bgcolor="#0b0f17" if st.session_state["theme_dark"] else "#fafafa",
+            font_color="#e6edf3" if st.session_state["theme_dark"] else "#0f172a",
+            cdn_resources="in_line",
+            notebook=False,
+            select_menu=False,
+            filter_menu=False,
+        )
 
+        # Warna gradien biru (semua node biru dengan intensitas berbeda),
+        # node seed = kuning untuk highlight
         for node in H.nodes():
             t = (pr[node] - pr_min) / (pr_max - pr_min) if pr_max > pr_min else 0.5
             is_seed = node == seed
-            # Color: blue accent gradient (minimalis, bukan rainbow)
+
             if is_seed:
-                color = {"background": "#fbbf24", "border": "#f59e0b"}
+                color = {
+                    "background": "#fbbf24",
+                    "border": "#f59e0b",
+                    "highlight": {"background": "#fbbf24", "border": "#d97706"},
+                }
                 border_width = 3
+                size = 25 + 25 * t
             else:
-                # interpolate from light gray to accent blue
-                intensity = int(60 + 195 * t)
-                color = {"background": f"rgb({100 - int(60*t)}, {150 - int(50*t)}, {intensity})",
-                         "border": "#1f2937" if st.session_state["theme_dark"] else "#cbd5e1"}
+                # Gradient biru muda -> biru tua berdasarkan PageRank
+                if st.session_state["theme_dark"]:
+                    r = int(96 - 50 * t)
+                    g = int(165 - 80 * t)
+                    b = int(250 - 30 * t)
+                    border = "#1f2937"
+                else:
+                    r = int(59 + 80 * t)
+                    g = int(130 - 50 * t)
+                    b = int(246 - 80 * t)
+                    border = "#cbd5e1"
+                color = {
+                    "background": f"rgb({r}, {g}, {b})",
+                    "border": border,
+                    "highlight": {"background": f"rgb({r}, {g}, {b})", "border": border},
+                }
                 border_width = 1
+                size = 12 + 30 * t
+
+            # In-degree dan out-degree untuk tooltip
+            in_deg = H.in_degree(node)
+            out_deg = H.out_degree(node)
 
             net.add_node(
-                node, label=node,
-                size=15 + 35 * t,
+                node,
+                label=node,
+                size=size,
                 color=color,
                 borderWidth=border_width,
-                title=f"Domain: {node}\nPageRank: {pr[node]:.5f}\nIn-degree: {H.in_degree(node)}\nOut-degree: {H.out_degree(node)}",
+                title=(
+                    f"Domain: {node}\n"
+                    f"PageRank: {pr[node]:.5f}\n"
+                    f"In-degree: {in_deg}\n"
+                    f"Out-degree: {out_deg}"
+                ),
+                font={"size": 12, "face": "Inter, -apple-system, sans-serif"},
             )
 
+        # Edge dengan weight, warna halus
+        max_weight = max((d.get("weight", 1) for _, _, d in H.edges(data=True)), default=1)
         for u, v, d in H.edges(data=True):
-            net.add_edge(u, v, value=d.get("weight", 1),
-                         color={"color": "rgba(148,163,184,0.4)"})
+            w = d.get("weight", 1)
+            # Lebar edge proporsional terhadap weight
+            width_val = max(0.5, min(3, 1 + 2 * (w / max_weight)))
+            net.add_edge(
+                u, v,
+                value=w,
+                width=width_val,
+                color={"color": "rgba(148,163,184,0.35)", "highlight": "rgba(148,163,184,0.7)"},
+                title=f"{u} -> {v}\nWeight: {w}",
+                arrows={"to": {"enabled": True, "scaleFactor": 0.5}},
+            )
 
+        # Options: force-directed layout, smooth edges, hover highlight
         net.set_options("""{
-          "interaction": {"hover": true, "tooltipDelay": 100, "navigationButtons": true, "zoomView": true},
-          "physics": {"solver": "forceAtlas2Based",
-                      "forceAtlas2Based": {"gravitationalConstant": -65, "springLength": 120},
-                      "stabilization": {"iterations": 200}},
-          "edges": {"smooth": {"type": "continuous"}, "arrows": {"to": {"scaleFactor": 0.5}}}
+          "interaction": {
+            "hover": true,
+            "tooltipDelay": 80,
+            "navigationButtons": true,
+            "zoomView": true,
+            "dragView": true,
+            "dragNodes": true,
+            "multiselect": false
+          },
+          "physics": {
+            "solver": "forceAtlas2Based",
+            "forceAtlas2Based": {
+              "gravitationalConstant": -55,
+              "centralGravity": 0.01,
+              "springLength": 130,
+              "springConstant": 0.08,
+              "damping": 0.4,
+              "avoidOverlap": 0.5
+            },
+            "stabilization": {
+              "enabled": true,
+              "iterations": 300,
+              "updateInterval": 25,
+              "onlyDynamicEdges": false,
+              "fit": true
+            },
+            "timestep": 0.5,
+            "maxVelocity": 50
+          },
+          "configure": {
+            "enabled": false
+          },
+          "edges": {
+            "smooth": {"type": "continuous", "roundness": 0.5},
+            "color": {"inherit": false},
+            "scaling": {"min": 0.5, "max": 3}
+          },
+          "nodes": {
+            "shape": "dot",
+            "scaling": {"min": 10, "max": 50}
+          }
         }""")
 
         import streamlit.components.v1 as components
-        components.html(net.generate_html(notebook=False), height=620, scrolling=True)
+        components.html(net.generate_html(notebook=False), height=680, scrolling=True)
 
-        st.caption("Node kuning = seed. Ukuran node proporsional terhadap PageRank. Scroll untuk zoom, drag untuk geser.")
+        st.caption(
+            "Node kuning = seed domain. Ukuran node proporsional terhadap PageRank. "
+            "Lebar edge proporsional terhadap jumlah tautan antar domain. "
+            "Scroll untuk zoom, drag untuk geser, hover untuk detail."
+        )
     else:
         st.info("Tidak ada node untuk ditampilkan.")
 

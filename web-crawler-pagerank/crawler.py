@@ -27,6 +27,14 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import requests
 from bs4 import BeautifulSoup
 
+# curl_cffi meniru TLS fingerprint browser asli, memungkinkan crawling website
+# yang memblokir bot berbasis Python requests standar (mis. Wikipedia, GitHub).
+try:
+    from curl_cffi import requests as cffi_requests
+    HAS_CURL_CFFI = True
+except ImportError:
+    HAS_CURL_CFFI = False
+
 
 # ---------------------------------------------------------------------------
 # Utility functions
@@ -40,14 +48,26 @@ DOMAIN_RE_GENERIC = re.compile(r"([^.]+\.[^.]+)$")
 DOMAIN_RE_ID = re.compile(r"([^.]+\.[^.]+\.[^.]+)$")
 
 # Header standar untuk menyamarkan bot sebagai browser biasa
+# Pakai User-Agent browser asli (Chrome di Windows) supaya mayoritas website menerima request.
+# Beberapa website (mis. Wikipedia) akan menolak User-Agent yang terlihat seperti bot.
 DEFAULT_HEADERS = {
     "User-Agent": (
-        "Mozilla/5.0 (compatible; WebStructureMiningBot/1.0; "
-        "+academic-research)"
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/120.0.0.0 Safari/537.36"
     ),
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-    "Accept-Language": "en,id;q=0.5",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.9,id;q=0.8",
+    "Accept-Encoding": "gzip, deflate, br",
+    "Connection": "keep-alive",
+    "Upgrade-Insecure-Requests": "1",
 }
+
+# Fallback User-Agents kalau User-Agent utama ditolak
+FALLBACK_USER_AGENTS = [
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15",
+    "Mozilla/5.0 (X11; Linux x86_64; rv:121.0) Gecko/20100101 Firefox/121.0",
+]
 
 
 def normalize_url(url: str) -> str:
@@ -322,6 +342,12 @@ class Crawler:
 
         Mengembalikan Page object, atau None jika gagal / ditolak robots.txt /
         domain terlarang.
+
+        Strategi fetch (universal crawler):
+        1. Coba curl_cffi dengan impersonate browser (paling tinggi peluang sukses)
+           - Mendukung website ketat seperti Wikipedia, GitHub, Cloudflare, dll.
+        2. Fallback ke requests standar dengan User-Agent browser
+        3. Fallback lagi ke User-Agent alternatif jika masih 403
         """
         if self.respect_robots and not RobotsCache.is_allowed(url):
             return None
@@ -342,25 +368,59 @@ class Crawler:
         if elapsed < self.delay:
             time.sleep(self.delay - elapsed)
 
-        try:
-            response = requests.get(
-                url,
-                headers=DEFAULT_HEADERS,
-                timeout=15,
-                allow_redirects=True,
-            )
-            response.raise_for_status()
-            content_type = response.headers.get("Content-Type", "")
-            if "text/html" not in content_type and "application/xhtml" not in content_type:
+        # Strategi 1: curl_cffi dengan impersonate browser (paling tinggi sukses)
+        if HAS_CURL_CFFI:
+            try:
+                response = cffi_requests.get(
+                    url,
+                    impersonate="chrome120",
+                    timeout=15,
+                    allow_redirects=True,
+                )
+                if response.status_code == 200:
+                    content_type = response.headers.get("Content-Type", "")
+                    if "text/html" in content_type or "application/xhtml" in content_type:
+                        with self._lock:
+                            self._domain_last_request[page_domain] = time.time()
+                            self._domain_count[page_domain] += 1
+                        return self._parse_html(response.text, str(response.url), depth)
+            except Exception:
+                pass  # lanjut ke strategi 2
+
+        # Strategi 2: requests standar dengan User-Agent browser
+        user_agents_to_try = [DEFAULT_HEADERS["User-Agent"]] + FALLBACK_USER_AGENTS
+
+        for i, user_agent in enumerate(user_agents_to_try):
+            headers = dict(DEFAULT_HEADERS)
+            headers["User-Agent"] = user_agent
+            try:
+                response = requests.get(
+                    url,
+                    headers=headers,
+                    timeout=15,
+                    allow_redirects=True,
+                )
+
+                # HTTP 403 = Forbidden, biasanya User-Agent ditolak. Coba UA lain.
+                if response.status_code == 403 and i < len(user_agents_to_try) - 1:
+                    continue
+
+                response.raise_for_status()
+                content_type = response.headers.get("Content-Type", "")
+                if "text/html" not in content_type and "application/xhtml" not in content_type:
+                    return None
+
+                with self._lock:
+                    self._domain_last_request[page_domain] = time.time()
+                    self._domain_count[page_domain] += 1
+
+                return self._parse_html(response.text, response.url, depth)
+            except (requests.RequestException, ConnectionError, TimeoutError):
+                if i < len(user_agents_to_try) - 1:
+                    continue
                 return None
 
-            with self._lock:
-                self._domain_last_request[page_domain] = time.time()
-                self._domain_count[page_domain] += 1
-
-            return self._parse_html(response.text, response.url, depth)
-        except (requests.RequestException, ConnectionError, TimeoutError):
-            return None
+        return None
 
     def _parse_html(self, html: str, final_url: str, depth: int) -> Page:
         """Parse HTML, ekstrak judul dan semua link.
