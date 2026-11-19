@@ -2,6 +2,9 @@
 Streamlit app: Web Crawler + PageRank antarwebsite.
 Jalankan lokal:  streamlit run app.py
 
+Tema: Black + Pink (minimalis, professional, mirip Vercel/GitHub Copilot).
+Menggunakan pyvis (vis.js) untuk visualisasi graph live dan interaktif.
+Tanpa toggle dark/light - gunakan tema bawaan Streamlit (Settings browser).
 """
 
 from __future__ import annotations
@@ -20,13 +23,12 @@ sys.path.insert(0, str(Path(__file__).parent))
 from crawler import Crawler, normalize_url, get_domain
 from graph_builder import build_graph, pagerank, compute_metrics, graph_summary, export_graph, top_n_pagerank
 from database import init_db, save_crawl_result, list_crawls, get_crawl_detail, delete_crawl
-from flourish_graph import render_flourish_graph
 
 # ---------------------------------------------------------------------------
 # Konfigurasi halaman
 # ---------------------------------------------------------------------------
 st.set_page_config(
-    page_title="Web Crawler PageRank Analyzer",
+    page_title="WebRank Explorer",
     page_icon="🕸️",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -40,189 +42,288 @@ DB_PATH = BASE_DIR / "crawl_history.db"
 init_db(str(DB_PATH))
 
 # ---------------------------------------------------------------------------
-# Tema & styling - palet teal-emerald (BEDA dari referensi ungu-pink)
+# Tema Black-Pink (hardcoded, tidak ada toggle)
+# Pink accent: #ec4899 (Pink-500)
 # ---------------------------------------------------------------------------
-def apply_theme(dark: bool) -> None:
-    """Apply dark/light theme via custom CSS dengan palet teal-emerald."""
-    if dark:
-        # Dark mode: deep teal background
-        hero_grad_start = "#0d9488"   # Teal-600
-        hero_grad_mid = "#059669"     # Emerald-600
-        hero_grad_end = "#10b981"     # Emerald-500
-        bg = "#0a0e17"
-        surface = "#0f172a"
-        surface_alt = "rgba(20, 184, 166, 0.08)"  # Teal translucent
-        border = "rgba(20, 184, 166, 0.25)"
-        text = "#e2e8f0"
-        text_muted = "#94a3b8"
-        accent = "#14b8a6"
-        pill_bg = "rgba(20, 184, 166, 0.15)"
-        pill_border = "rgba(20, 184, 166, 0.45)"
-        btn_grad_start = "#0d9488"
-        btn_grad_end = "#10b981"
-    else:
-        # Light mode: bright emerald
-        hero_grad_start = "#0d9488"
-        hero_grad_mid = "#10b981"
-        hero_grad_end = "#34d399"
-        bg = "#ffffff"
-        surface = "#f8fafc"
-        surface_alt = "rgba(20, 184, 166, 0.06)"
-        border = "rgba(20, 184, 166, 0.2)"
-        text = "#0f172a"
-        text_muted = "#64748b"
-        accent = "#0d9488"
-        pill_bg = "rgba(20, 184, 166, 0.12)"
-        pill_border = "rgba(20, 184, 166, 0.4)"
-        btn_grad_start = "#0d9488"
-        btn_grad_end = "#10b981"
+PINK = "#ec4899"
+PINK_LIGHT = "#f472b6"
+PINK_DARK = "#be185d"
 
-    st.markdown(f"""
-    <style>
-    /* Override Streamlit default theme */
-    .stApp {{
-        background-color: {bg};
-        color: {text};
-    }}
-    .stSidebar {{
-        background-color: {surface};
-        border-right: 1px solid {border};
-    }}
-    /* Block container */
-    .block-container {{
-        padding-top: 2rem;
-        max-width: 1300px;
-    }}
-    /* Hero gradient */
-    .hero {{
-        padding: 2rem 2.2rem;
-        border-radius: 18px;
-        margin-bottom: 1.2rem;
-        background: linear-gradient(135deg, {hero_grad_start} 0%, {hero_grad_mid} 50%, {hero_grad_end} 100%);
-        color: white;
-        box-shadow: 0 10px 30px rgba(13, 148, 136, 0.25);
-    }}
-    .hero h1 {{
-        margin: 0;
-        font-size: 2.2rem;
-        font-weight: 800;
-        letter-spacing: -.5px;
-    }}
-    .hero p {{
-        margin: .4rem 0 0;
-        opacity: .95;
-        font-size: 1.02rem;
-    }}
-    /* Card stat */
-    .card {{
-        background: {surface_alt};
-        border: 1px solid {border};
-        border-radius: 14px;
-        padding: 1rem 1.2rem;
-        height: 100%;
-    }}
-    .card .label {{
-        font-size: .78rem;
-        text-transform: uppercase;
-        letter-spacing: .08em;
-        opacity: .7;
-        color: {text_muted};
-    }}
-    .card .value {{
-        font-size: 1.7rem;
-        font-weight: 800;
-        line-height: 1.25;
-        word-break: break-all;
-        color: {text};
-    }}
-    .card .value.small {{
-        font-size: 1.15rem;
-    }}
-    /* Pill chip */
-    .pill {{
-        display: inline-block;
-        padding: .15rem .65rem;
-        border-radius: 999px;
-        margin: 0 .3rem .3rem 0;
-        background: {pill_bg};
-        border: 1px solid {pill_border};
-        font-size: .82rem;
-        color: {text};
-    }}
-    /* Primary button */
-    div.stButton > button[kind="primary"] {{
-        background: linear-gradient(90deg, {btn_grad_start}, {btn_grad_end});
-        border: 0;
-        font-weight: 700;
-        border-radius: 10px;
-        padding: .6rem 1rem;
-        color: white;
-    }}
-    /* Section title */
-    .section-title {{
-        font-size: 11px;
-        font-weight: 600;
-        letter-spacing: 0.8px;
-        text-transform: uppercase;
-        color: {text_muted};
-        margin-bottom: 12px;
-        padding-bottom: 4px;
-        border-bottom: 1px solid {border};
-    }}
-    /* Tab style */
-    .stTabs [data-baseweb="tab-list"] {{
-        background-color: transparent;
-        border-bottom: 1px solid {border};
-    }}
-    .stTabs [data-baseweb="tab"] {{
-        color: {text_muted};
-        font-weight: 500;
-    }}
-    .stTabs [aria-selected="true"] {{
-        color: {text} !important;
-        border-bottom: 2px solid {accent};
-    }}
-    </style>
-    """, unsafe_allow_html=True)
+st.markdown("""
+<style>
+/* === GLOBAL === */
+.stApp {
+    background-color: #09090b;
+    color: #fafafa;
+}
 
+/* === SIDEBAR === */
+.stSidebar, .stSidebar > div {
+    background-color: #0c0c0f;
+    border-right: 1px solid #1f1f23;
+}
+.stSidebar h1, .stSidebar h2, .stSidebar h3, .stSidebar h4 {
+    color: #fafafa;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+}
 
-# Initialize theme state
-if "theme_dark" not in st.session_state:
-    st.session_state["theme_dark"] = True
+/* Section heading di sidebar - mirip dokumentasi Vercel */
+.sidebar-heading {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #71717a;
+    margin: 1.5rem 0 0.5rem 0;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid #1f1f23;
+}
 
-apply_theme(st.session_state["theme_dark"])
+/* === MAIN CONTENT === */
+.block-container {
+    padding-top: 2rem;
+    max-width: 1300px;
+}
+
+/* === HERO === */
+.hero {
+    padding: 2.2rem 2.4rem;
+    margin-bottom: 1.5rem;
+    background: #0c0c0f;
+    border: 1px solid #1f1f23;
+    border-radius: 12px;
+    border-left: 3px solid #ec4899;
+}
+.hero h1 {
+    margin: 0 0 0.6rem 0;
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: #fafafa;
+}
+.hero h1 .accent {
+    color: #ec4899;
+}
+.hero p {
+    margin: 0;
+    color: #a1a1aa;
+    font-size: 0.95rem;
+    max-width: 720px;
+    line-height: 1.5;
+}
+
+/* === SECTION HEADING (uppercase kecil, mirip Vercel docs) === */
+.section-heading {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #71717a;
+    margin: 1.5rem 0 0.8rem 0;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid #1f1f23;
+}
+
+/* === STAT CARDS (icon mini + value) === */
+.stat-card {
+    background: #0c0c0f;
+    border: 1px solid #1f1f23;
+    border-radius: 8px;
+    padding: 1.1rem 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    height: 100%;
+    transition: border-color 0.15s ease;
+}
+.stat-card:hover {
+    border-color: #ec4899;
+}
+.stat-card .icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    background: rgba(236, 72, 153, 0.1);
+    border: 1px solid rgba(236, 72, 153, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    color: #ec4899;
+    flex-shrink: 0;
+}
+.stat-card .content {
+    flex: 1;
+    min-width: 0;
+}
+.stat-card .label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #71717a;
+    margin-bottom: 0.2rem;
+}
+.stat-card .value {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #fafafa;
+    line-height: 1.2;
+    word-break: break-all;
+}
+.stat-card .value.small {
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+/* === PILLS === */
+.pill {
+    display: inline-block;
+    padding: 0.18rem 0.65rem;
+    border-radius: 999px;
+    margin: 0 0.25rem 0.25rem 0;
+    background: rgba(236, 72, 153, 0.08);
+    border: 1px solid rgba(236, 72, 153, 0.25);
+    font-size: 0.78rem;
+    color: #fafafa;
+    transition: all 0.15s ease;
+}
+.pill:hover {
+    background: rgba(236, 72, 153, 0.15);
+    border-color: rgba(236, 72, 153, 0.5);
+}
+
+/* === PRIMARY BUTTON (pink accent) === */
+div.stButton > button[kind="primary"] {
+    background-color: #ec4899;
+    color: white;
+    border: 0;
+    font-weight: 600;
+    border-radius: 8px;
+    padding: 0.55rem 1.4rem;
+    transition: background-color 0.15s ease;
+}
+div.stButton > button[kind="primary"]:hover {
+    background-color: #be185d;
+}
+
+/* === INPUT === */
+.stTextInput > div > div > input {
+    background-color: #0c0c0f !important;
+    color: #fafafa !important;
+    border: 1px solid #27272a !important;
+    border-radius: 8px !important;
+    font-family: inherit !important;
+}
+.stTextInput > div > div > input:focus {
+    border-color: #ec4899 !important;
+    box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.1) !important;
+}
+
+/* === SLIDER === */
+.stSlider > div > div > div > div {
+    background-color: #ec4899 !important;
+}
+
+/* === TABS - underline pink === */
+.stTabs [data-baseweb="tab-list"] {
+    background-color: transparent;
+    border-bottom: 1px solid #27272a;
+    gap: 0;
+}
+.stTabs [data-baseweb="tab"] {
+    color: #71717a;
+    font-weight: 500;
+    padding: 0.6rem 1rem;
+    border-radius: 0;
+}
+.stTabs [data-baseweb="tab"]:hover {
+    color: #fafafa;
+}
+.stTabs [aria-selected="true"] {
+    color: #fafafa !important;
+    background-color: transparent !important;
+}
+.stTabs [data-baseweb="tab-highlight"] {
+    background-color: #ec4899 !important;
+    height: 2px !important;
+}
+.stTabs [data-baseweb="tab-border"] {
+    border: 0 !important;
+}
+
+/* === DATAFRAME === */
+.stDataFrame [data-baseweb="table"] {
+    background-color: #0c0c0f;
+}
+.stDataFrame [data-baseweb="table"] thead {
+    background-color: #18181b;
+}
+.stDataFrame [data-baseweb="table"] th {
+    color: #a1a1aa;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+}
+
+/* === EXPANDER === */
+.streamlit-expanderHeader {
+    background-color: #0c0c0f;
+    color: #fafafa;
+    font-size: 0.85rem;
+    border: 1px solid #27272a;
+    border-radius: 6px;
+}
+
+/* === TEXT COLOR === */
+h1, h2, h3, h4, h5, h6 { color: #fafafa !important; }
+p, li, span { color: #d4d4d8; }
+strong { color: #fafafa; }
+a { color: #ec4899; text-decoration: none; }
+a:hover { color: #f472b6; text-decoration: underline; }
+
+/* === SUCCESS / WARNING / ERROR === */
+.stAlert > div {
+    background-color: #0c0c0f !important;
+    border: 1px solid #27272a !important;
+}
+
+/* === CAPTION === */
+.stCaption {
+    color: #71717a !important;
+    font-size: 0.8rem !important;
+}
+
+/* === DIVIDER === */
+hr {
+    border-color: #1f1f23 !important;
+    margin: 2rem 0 !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
 
 # ---------------------------------------------------------------------------
-# Hero section
+# Hero section (minimalis: logo web + judul saja yang ada emoji)
 # ---------------------------------------------------------------------------
 st.markdown(
     """
 <div class="hero">
-  <h1>🕸️ WebRank Explorer</h1>
+  <h1>🕸️ <span class="accent">WebRank Explorer</span></h1>
   <p>Masukkan sebuah link website. Aplikasi akan menelusuri tautan-tautannya, membangun graph
-  keterhubungan antarwebsite, lalu menghitung <b>PageRank</b> untuk menemukan website paling berpengaruh.</p>
+  keterhubungan antarwebsite, lalu menghitung PageRank untuk menemukan website paling berpengaruh.</p>
 </div>
 """,
     unsafe_allow_html=True,
 )
 
 # ---------------------------------------------------------------------------
-# Sidebar: pengaturan
+# Sidebar: pengaturan (tanpa emoji, hanya heading uppercase kecil)
 # ---------------------------------------------------------------------------
 with st.sidebar:
-    # Theme toggle di paling atas sidebar
-    st.markdown("### 🎨 Tema")
-    if st.session_state["theme_dark"]:
-        if st.button("☀️ Light Mode", use_container_width=True):
-            st.session_state["theme_dark"] = False
-            st.rerun()
-    else:
-        if st.button("🌙 Dark Mode", use_container_width=True):
-            st.session_state["theme_dark"] = True
-            st.rerun()
-
-    st.markdown("---")
-    st.markdown("### ⚙️ Pengaturan Crawl")
+    st.markdown('<div class="sidebar-heading">Pengaturan Crawl</div>', unsafe_allow_html=True)
     depth = st.slider("Kedalaman (depth)", 1, 3, 2,
                       help="Seberapa jauh tautan diikuti. Makin dalam makin lama.")
     max_pages = st.slider("Maks. total halaman", 10, 150, 50, step=10)
@@ -231,28 +332,28 @@ with st.sidebar:
                       help="Jeda sopan terhadap website yang sama.")
     max_seconds = st.slider("Batas waktu crawl (detik)", 20, 300, 90, step=10)
     respect_robots = st.checkbox("Patuhi robots.txt", value=False,
-                                 help="Default nonaktif agar bisa crawl website apapun. Aktifkan untuk crawling sopan.")
+                                 help="Default nonaktif agar bisa crawl website apapun.")
     weighted = st.checkbox("Bobot edge = jumlah tautan", value=True)
     damping = st.slider("Damping factor PageRank", 0.50, 0.99, 0.85, step=0.01)
     restrict_seed = st.checkbox("Batasi ke domain seed", value=False,
                                 help="Hanya crawl domain yang sama dengan seed URL.")
-    st.caption("Tips: mulai dengan pengaturan kecil agar cepat, lalu naikkan bertahap.")
 
-    st.markdown("---")
-    st.markdown("### 🗄️ Database")
+    st.markdown('<div class="sidebar-heading">Database</div>', unsafe_allow_html=True)
     show_history = st.checkbox("Tampilkan history crawl", value=False)
 
 # ---------------------------------------------------------------------------
-# Input
+# Input section
 # ---------------------------------------------------------------------------
+st.markdown('<div class="section-heading">URL Analisis</div>', unsafe_allow_html=True)
+
 c_in, c_btn = st.columns([5, 1], vertical_alignment="bottom")
 with c_in:
-    url_input = st.text_input("🔗 Link website", placeholder="https://www.wikipedia.org",
+    url_input = st.text_input("Link website", placeholder="https://www.wikipedia.org",
                               label_visibility="collapsed")
 with c_btn:
-    run = st.button("🚀 Analisis", type="primary", use_container_width=True)
+    run = st.button("Analisis", type="primary", use_container_width=True)
 
-st.caption("Contoh: `https://www.wikipedia.org` · `https://news.ycombinator.com` · `https://github.com` · `https://trunojoyo.ac.id`")
+st.caption("Contoh: https://www.wikipedia.org - https://news.ycombinator.com - https://github.com - https://trunojoyo.ac.id")
 
 # ---------------------------------------------------------------------------
 # Proses crawl
@@ -283,7 +384,7 @@ def run_analysis(url):
 
     if not crawler.pages_crawled:
         st.error("Tidak ada halaman yang berhasil dibaca. Penyebab umum: website memblokir bot, "
-                 "dilarang `robots.txt`, bukan halaman HTML, atau alamat tidak dapat dijangkau.")
+                 "dilarang robots.txt, bukan halaman HTML, atau alamat tidak dapat dijangkau.")
         return None
     if not crawler.edges:
         st.warning("Halaman terbaca, tetapi tidak ditemukan tautan ke website lain.")
@@ -345,8 +446,7 @@ if run:
 
 # Tampilkan history crawl
 if show_history:
-    st.markdown("---")
-    st.markdown('<div class="section-title">History Crawl</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-heading">History Crawl</div>', unsafe_allow_html=True)
     history_df = list_crawls(str(DB_PATH), limit=20)
     if history_df.empty:
         st.info("Belum ada history crawl.")
@@ -362,7 +462,7 @@ if show_history:
 # ---------------------------------------------------------------------------
 res = st.session_state.get("result")
 if not res:
-    st.info("👆 Masukkan link lalu tekan **Analisis** untuk memulai.")
+    st.info("Masukkan link lalu tekan Analisis untuk memulai.")
     st.stop()
 
 G, pr, seed = res["G"], res["pr"], res["seed"]
@@ -373,50 +473,189 @@ top_site, top_score = ranking[0]
 elapsed = res["elapsed"]
 
 # ---------------------------------------------------------------------------
-# Ringkasan stat cards
+# Stat cards (icon mini + value, minimalis, tanpa emoji di label)
 # ---------------------------------------------------------------------------
-def card(col, label, value, small=False):
-    col.markdown(f'<div class="card"><div class="label">{label}</div>'
-                 f'<div class="value {"small" if small else ""}">{value}</div></div>',
-                 unsafe_allow_html=True)
+st.markdown('<div class="section-heading">Ringkasan</div>', unsafe_allow_html=True)
+
+def stat_card(col, icon, label, value, small=False):
+    col.markdown(f"""
+    <div class="stat-card">
+      <div class="icon">{icon}</div>
+      <div class="content">
+        <div class="label">{label}</div>
+        <div class="value {"small" if small else ""}">{value}</div>
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
 
 m = st.columns(4)
-card(m[0], "🌐 Website ditemukan", f"{G.number_of_nodes():,}")
-card(m[1], "📄 Halaman di-crawl", f"{sum(res['crawled'].values()):,}")
-card(m[2], "🔗 Tautan antarwebsite", f"{G.number_of_edges():,}")
-card(m[3], "🏆 Paling penting", top_site, small=True)
+stat_card(m[0], "🌐", "Website ditemukan", f"{G.number_of_nodes():,}")
+stat_card(m[1], "📄", "Halaman di-crawl", f"{sum(res['crawled'].values()):,}")
+stat_card(m[2], "🔗", "Tautan antarwebsite", f"{G.number_of_edges():,}")
+stat_card(m[3], "★", "Paling penting", top_site, small=True)
 st.write("")
 
 # ---------------------------------------------------------------------------
-# Tabs (mirip referensi, dengan emoji)
+# Tabs (tanpa emoji di label, hanya teks)
 # ---------------------------------------------------------------------------
 tab_graph, tab_rank, tab_rel, tab_metrics, tab_dl = st.tabs([
-    "🕸️ Graph",
-    "🏆 Peringkat PageRank",
-    "🔗 Website Terkait",
-    "📊 Metrik Graph",
-    "📥 Unduh",
+    "Graph",
+    "Peringkat PageRank",
+    "Website Terkait",
+    "Metrik Graph",
+    "Unduh",
 ])
 
 # --------------------------------------------------------------------------
-# Tab 1: Graph (Flourish-style dengan D3.js)
+# Tab 1: Graph (pakai pyvis = vis.js, live & interaktif)
+# Pink + multi-color gradient untuk node
 # --------------------------------------------------------------------------
+def lerp_color_pink_multicolor(t):
+    """Gradient multi-stop: indigo -> purple -> pink -> orange (PageRank rendah -> tinggi).
+
+    Node seed pakai pink solid, node lain pakai gradient ini berdasarkan PageRank.
+    """
+    # Stops warna-warni tapi tetap dalam tema dark
+    stops = [
+        (0.0, (99, 102, 241)),    # Indigo-500 (PageRank rendah)
+        (0.33, (168, 85, 247)),   # Purple-500
+        (0.66, (236, 72, 153)),   # Pink-500
+        (1.0, (251, 146, 60)),    # Orange-400 (PageRank tinggi)
+    ]
+    t = max(0.0, min(1.0, t))
+    for i in range(len(stops) - 1):
+        t0, (r0, g0, b0) = stops[i]
+        t1, (r1, g1, b1) = stops[i + 1]
+        if t0 <= t <= t1:
+            f = (t - t0) / (t1 - t0)
+            r = int(r0 + (r1 - r0) * f)
+            g = int(g0 + (g1 - g0) * f)
+            b = int(b0 + (b1 - b0) * f)
+            return f"rgb({r}, {g}, {b})"
+    return "rgb(99, 102, 241)"
+
+
+def build_html(G, pr, seed, top_n):
+    """Build interactive HTML graph menggunakan pyvis (vis.js).
+
+    Tema: black background, node warna-warni (indigo -> pink -> orange),
+    seed = pink solid. vis.js physics otomatis jalan live saat HTML load.
+    """
+    from pyvis.network import Network
+    keep = {n for n, _ in sorted(pr.items(), key=lambda x: -x[1])[:top_n]} | {seed}
+    H = G.subgraph(keep)
+    vmax, vmin = max(pr[n] for n in H), min(pr[n] for n in H)
+    span = (vmax - vmin) or 1
+
+    net = Network(height="640px", width="100%", directed=True,
+                  bgcolor="#09090b", font_color="#fafafa",
+                  cdn_resources="in_line", notebook=False)
+
+    for n in H.nodes():
+        t = (pr[n] - vmin) / span
+        is_seed = n == seed
+        if is_seed:
+            # Seed: pink solid, lebih besar
+            color = {"background": "#ec4899", "border": "#ffffff",
+                     "highlight": {"background": "#f472b6", "border": "#ffffff"}}
+            size = 30
+            border_width = 3
+        else:
+            # Node lain: gradient multi-color
+            color_hex = lerp_color_pink_multicolor(t)
+            color = {"background": color_hex, "border": "#27272a",
+                     "highlight": {"background": color_hex, "border": "#ec4899"}}
+            size = 14 + 30 * t
+            border_width = 1
+
+        title = (f"<div style='padding:6px;font-family:Inter,sans-serif;'>"
+                 f"<b style='font-size:13px;color:#fafafa;'>{n}</b><br>"
+                 f"<span style='color:#71717a;'>PageRank:</span> "
+                 f"<b style='color:#ec4899;'>{pr[n]:.5f}</b><br>"
+                 f"<span style='color:#71717a;'>In-degree:</span> {H.in_degree(n)}<br>"
+                 f"<span style='color:#71717a;'>Out-degree:</span> {H.out_degree(n)}"
+                 f"</div>")
+
+        net.add_node(n, label=n, size=size, color=color, borderWidth=border_width,
+                     title=title,
+                     font={"size": 14 if is_seed else 12, "color": "#fafafa",
+                           "face": "Inter, -apple-system, sans-serif"})
+
+    for u, v, d in H.edges(data=True):
+        weight = d.get("weight", 1)
+        net.add_edge(u, v, value=weight,
+                     color={"color": "rgba(236, 72, 153, 0.25)",
+                            "highlight": "#ec4899"},
+                     title=f"{u} → {v}<br>Jumlah tautan: {weight}")
+
+    # Physics: forceAtlas2Based dengan parameter halus & stabil
+    # - maxVelocity rendah: node bergerak lambat, tidak pusing
+    # - damping tinggi: node cepat tenang setelah bergerak
+    # - gravitationalConstant lembut: tidak terlalu kuat tolak-menolak
+    # - fit: false supaya tidak auto-rezoom setiap iterasi (yang bikin pusing)
+    net.set_options("""{
+      "interaction": {
+        "hover": true,
+        "tooltipDelay": 80,
+        "navigationButtons": true,
+        "zoomView": true,
+        "dragView": true,
+        "dragNodes": true,
+        "hideEdgesOnDrag": false,
+        "hideNodesOnDrag": false
+      },
+      "physics": {
+        "enabled": true,
+        "solver": "forceAtlas2Based",
+        "forceAtlas2Based": {
+          "gravitationalConstant": -35,
+          "centralGravity": 0.02,
+          "springLength": 130,
+          "springConstant": 0.05,
+          "damping": 0.6,
+          "avoidOverlap": 0.7
+        },
+        "stabilization": {
+          "enabled": true,
+          "iterations": 300,
+          "updateInterval": 50,
+          "onlyDynamicEdges": false,
+          "fit": false
+        },
+        "timestep": 0.3,
+        "maxVelocity": 15,
+        "adaptiveTimestep": true
+      },
+      "edges": {
+        "smooth": {"type": "continuous", "roundness": 0.5},
+        "arrows": {"to": {"enabled": true, "scaleFactor": 0.6}},
+        "color": {"inherit": false},
+        "scaling": {"min": 1, "max": 5}
+      },
+      "nodes": {
+        "shape": "dot",
+        "scaling": {"min": 10, "max": 50}
+      }
+    }""")
+    return net.generate_html(notebook=False)
+
+
 with tab_graph:
     n_total = G.number_of_nodes()
     top_n = n_total if n_total <= 10 else st.slider(
         "Jumlah website ditampilkan (berdasarkan PageRank tertinggi)",
         5, n_total, min(n_total, 40)
     )
-
-    graph_html = render_flourish_graph(
-        G=G, pr=pr, seed=seed, metrics_df=metrics_df,
-        top_n=top_n, height=700, dark_mode=st.session_state["theme_dark"],
-    )
     import streamlit.components.v1 as components
-    components.html(graph_html, height=760, scrolling=True)
 
-    st.caption("🟡 = website awal yang Anda masukkan · ukuran & warna node = PageRank · "
-               "anak panah = arah tautan · scroll untuk zoom, seret untuk menggeser.")
+    components.html(
+        build_html(G, pr, seed, top_n),
+        width=None,
+        height=660,
+        scrolling=True
+    )
+    st.caption("Node pink = website awal (seed). Ukuran & warna node = PageRank. "
+               "Anak panah = arah tautan. Scroll untuk zoom, seret untuk menggeser.")
 
 # --------------------------------------------------------------------------
 # Tab 2: Peringkat PageRank
@@ -439,37 +678,37 @@ with tab_rank:
             }
         )
     with right:
-        st.markdown("**Top 10 website**")
+        st.markdown('<div class="section-heading">Top 10 Website</div>', unsafe_allow_html=True)
         st.bar_chart(df_rank.head(10).set_index("Website")["PageRank"],
-                     horizontal=True, color="#0d9488")
-    st.success(f"**{top_site}** adalah website dengan tingkat kepentingan tertinggi "
+                     horizontal=True, color="#ec4899")
+    st.success(f"{top_site} adalah website dengan tingkat kepentingan tertinggi "
                f"(PageRank {top_score:.5f}), karena banyak menerima tautan dari website penting lain.")
 
 # --------------------------------------------------------------------------
 # Tab 3: Website Terkait
 # --------------------------------------------------------------------------
 with tab_rel:
-    st.markdown(f"#### Website yang terkait dengan `{seed}`")
+    st.markdown(f'<div class="section-heading">Website Terkait dengan {seed}</div>', unsafe_allow_html=True)
     out_nb = sorted(G.successors(seed), key=lambda n: -pr[n]) if seed in G else []
     in_nb = sorted(G.predecessors(seed), key=lambda n: -pr[n]) if seed in G else []
 
     a, b = st.columns(2)
     with a:
-        st.markdown(f"**➡️ Ditautkan oleh {seed}** ({len(out_nb)})")
+        st.markdown(f"**Ditautkan oleh {seed}** ({len(out_nb)})")
         if out_nb:
             st.markdown("".join(f'<span class="pill">{n}</span>' for n in out_nb[:30]),
                         unsafe_allow_html=True)
         else:
             st.caption("Tidak ada.")
     with b:
-        st.markdown(f"**⬅️ Menaut ke {seed}** ({len(in_nb)})")
+        st.markdown(f"**Menaut ke {seed}** ({len(in_nb)})")
         if in_nb:
             st.markdown("".join(f'<span class="pill">{n}</span>' for n in in_nb[:30]),
                         unsafe_allow_html=True)
         else:
             st.caption("Tidak ditemukan pada crawl ini.")
 
-    st.markdown("**Rincian tautan dari website awal**")
+    st.markdown('<div class="section-heading">Rincian Tautan dari Website Awal</div>', unsafe_allow_html=True)
     by_dst = defaultdict(list)
     for src_url, dst_url in res["page_links"]:
         if get_domain(src_url) == seed and get_domain(dst_url) != seed:
@@ -478,10 +717,10 @@ with tab_rel:
         st.caption("Tidak ada tautan keluar dari website awal.")
     for dst in sorted(by_dst, key=lambda n: -pr.get(n, 0)):
         pairs = by_dst[dst]
-        with st.expander(f"{dst} · {len(pairs)} tautan · PageRank {pr.get(dst, 0):.5f}"):
+        with st.expander(f"{dst} - {len(pairs)} tautan - PageRank {pr.get(dst, 0):.5f}"):
             for src_url, dst_url in pairs[:15]:
                 title = res["titles"].get(src_url) or src_url
-                st.markdown(f"- {dst_url}  \n  <small>dari: {title}</small>", unsafe_allow_html=True)
+                st.markdown(f"- {dst_url}  \n  dari: {title}")
             if len(pairs) > 15:
                 st.caption(f"... dan {len(pairs) - 15} tautan lainnya")
 
@@ -490,7 +729,7 @@ with tab_rel:
 # --------------------------------------------------------------------------
 with tab_metrics:
     summary = graph_summary(G)
-    st.markdown('<div class="section-title">Ringkasan Graph</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-heading">Ringkasan Graph</div>', unsafe_allow_html=True)
     metric_rows = [
         ("Jumlah node (domain)", summary["nodes"]),
         ("Jumlah edge", summary["edges"]),
@@ -505,18 +744,18 @@ with tab_metrics:
     metric_df = pd.DataFrame(metric_rows, columns=["Metrik", "Nilai"])
     st.dataframe(metric_df, hide_index=True, use_container_width=True)
 
-    st.markdown('<div class="section-title">Distribusi Derajat</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-heading">Distribusi Derajat</div>', unsafe_allow_html=True)
     dist_c1, dist_c2 = st.columns(2)
     with dist_c1:
         st.markdown("**Distribusi In-degree**")
         in_dist = pd.Series([d for _, d in G.in_degree()]).value_counts().sort_index()
-        st.bar_chart(in_dist)
+        st.bar_chart(in_dist, color="#ec4899")
     with dist_c2:
         st.markdown("**Distribusi Out-degree**")
         out_dist = pd.Series([d for _, d in G.out_degree()]).value_counts().sort_index()
-        st.bar_chart(out_dist)
+        st.bar_chart(out_dist, color="#ec4899")
 
-    st.markdown('<div class="section-title">Detail Crawl</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-heading">Detail Crawl</div>', unsafe_allow_html=True)
     detail_rows = [
         ("Seed URL", res["url"]),
         ("Seed domain", seed),
@@ -534,20 +773,19 @@ with tab_dl:
         [{"sumber": u, "tujuan": v, "jumlah_tautan": c} for (u, v), c in res["edges"].items()]
     ).sort_values("jumlah_tautan", ascending=False)
 
-    st.markdown("### 📥 Download Hasil Analisis")
+    st.markdown('<div class="section-heading">Download Hasil Analisis</div>', unsafe_allow_html=True)
 
     d1, d2 = st.columns(2)
     with d1:
-        st.download_button("⬇️ pagerank.csv",
+        st.download_button("pagerank.csv",
                            df_rank.to_csv(index=False).encode("utf-8"),
                            "pagerank.csv", "text/csv", use_container_width=True)
     with d2:
-        st.download_button("⬇️ edges.csv",
+        st.download_button("edges.csv",
                            df_edges.to_csv(index=False).encode("utf-8"),
                            "edges.csv", "text/csv", use_container_width=True)
 
-    st.markdown("---")
-    st.markdown("### 📁 Export ke Format Lain")
+    st.markdown('<div class="section-heading">Export ke Format Lain</div>', unsafe_allow_html=True)
 
     if st.button("Generate file export (GraphML, JSON)", type="primary"):
         with st.spinner("Mengekspor..."):
@@ -565,4 +803,4 @@ with tab_dl:
                     key=f"dl_{fmt}",
                 )
 
-    st.caption(f"⏱️ Crawl selesai dalam {elapsed:.1f} detik · seed: {res['url']}")
+    st.caption(f"Crawl selesai dalam {elapsed:.1f} detik - seed: {res['url']}")

@@ -1,315 +1,597 @@
-<div align="center">
-
-# Analisis Graf Berarah & Tak Berarah dengan NetworkX
-
-### Tugas Web Structure Mining Karakterisasi Graf 5 Simpul
-
-![Python](https://img.shields.io/badge/Python-3.10+-blue?logo=python&logoColor=white)
-![NetworkX](https://img.shields.io/badge/NetworkX-3.x-1f3b73?logo=python&logoColor=white)
-![Jupyter](https://img.shields.io/badge/Jupyter-Notebook-F37626?logo=jupyter&logoColor=white)
-![License](https://img.shields.io/badge/License-MIT-green)
-![Status](https://img.shields.io/badge/Status-Selesai-success)
-
-**[Lihat Live Demo (GitHub Pages)](https://haninhammoud01.github.io/analisis-graf-networkx/)**
-
-</div>
-
-<br>
+# Web Structure Mining
 
 <p align="center">
-  <img src="images/cover.png" alt="Cover - Analisis Graf dengan NetworkX" width="700"/>
+  <strong>Tugas Mata Kuliah Web Structure Mining</strong>
 </p>
-
-<br>
-
-## Daftar Isi
-
-- [Tentang Project](#tentang-project)
-- [Konsep Teori (dari PPT Dosen)](#konsep-teori-dari-ppt-dosen)
-- [Hasil Analisis Singkat](#hasil-analisis-singkat)
-- [Struktur Folder](#struktur-folder)
-- [Cara Menjalankan](#cara-menjalankan)
-- [Live Demo (GitHub Pages)](#live-demo-github-pages)
-- [Cara Upload ke GitHub](#cara-upload-ke-github)
-- [Cara Aktifkan GitHub Pages](#cara-aktifkan-github-pages)
-- [Library yang Dipakai](#library-yang-dipakai)
-- [Referensi](#referensi)
-
-<br>
-
-## Tentang Project
-
-Project ini menganalisis **dua buah graf** yang masing-masing memiliki **5 simpul (vertex)**, satu **graf tak berarah** dan satu **graf berarah**, menggunakan library **`networkx`** di Python.
-
-Setiap graf dianalisis untuk metrik-metrik berikut:
-
-| Metrik | Graf Tak Berarah | Graf Berarah |
-|--------|:---:|:---:|
-| Matriks Ketetanggaan (Adjacency Matrix) | ya | ya |
-| Derajat (Degree) tiap simpul | ya | in-degree + out-degree |
-| Distribusi Derajat (Degree Distribution) | ya | ya (in & out) |
-| Derajat Rata-rata (Average Degree) | ya | ya |
-| Kepadatan Graf (Density) | ya | ya |
-| Lintasan Terpendek & Rata-ratanya | ya | ya |
-| Koefisien Klasterisasi (Clustering Coefficient) | ya | ya |
-
-<br>
-
-## Konsep Teori (dari PPT Dosen)
-
-> Materi mengikuti PPT **"Web Structure Mining"** Bab *Mendeskripsikan Graf: Terminologi dan Metrik*.
-
-### Definisi Dasar
-- **Graf** `G = (V, E)` adalah pasangan terurut dari himpunan simpul `V` dan himpunan sisi `E`.
-- **Graf Tak Berarah**: sisi `(a, b)` = `(b, a)` (simetris). Contoh: tautan koautor, jalan umum.
-- **Graf Berarah**: sisi `(a, b)` ≠ `(b, a)`. Sisi berarah disebut **busur (arc)**. Contoh: hyperlink WWW, follow Twitter.
-
-### Rumus-Rumus yang Dipakai
-
-**Derajat (Degree):**
-- Graf tak berarah: `d(v)` = jumlah sisi yang terhubung dengan `v`
-- Graf berarah:
-  - `k_in(v) = Σ a_ji` (in-degree)
-  - `k_out(v) = Σ a_ij` (out-degree)
-  - Total: `k(v) = k_in(v) + k_out(v)`
-
-**Derajat Rata-rata:**
-- Tak berarah: `<k> = 2L / N`
-- Berarah: `<k_in> = <k_out> = L / N`, `<k_total> = 2L / N`
-
-**Kepadatan Graf (Density):**
-- Tak berarah: `L_maks = N(N-1)/2`
-- Berarah: `L_maks = N(N-1)`
-- `Density = L / L_maks`
-
-**Koefisien Klasterisasi (Clustering Coefficient):**
-```
-C_i = 2 * k_i / (d_i * (d_i - 1))
-```
-`k_i` = jumlah sisi di antara tetangga simpul `i`, `d_i` = derajat simpul `i`. Nilai `C_i ∈ [0, 1]`.
-
-**Lintasan Terpendek (Shortest Path):**
-- Jarak `d(i, j)` = jumlah sisi sepanjang jalur terpendek yang menghubungkan `i` dan `j`.
-- Pada graf berarah, lintasan harus **mengikuti arah busur**, sehingga `d(i, j)` ≠ `d(j, i)` umumnya.
-
-<br>
-
-## Hasil Analisis Singkat
-
-### Graf Tak Berarah (5 simpul, 6 sisi)
 
 <p align="center">
-  <img src="images/graf_tak_berarah.png" alt="Graf Tak Berarah" width="350"/>
+  <img
+    src="images/cover.jpg"
+    alt="Web Structure Mining Cover"
+    width="100%"
+  >
 </p>
 
-| Simpul | Degree |
-|:---:|:---:|
-| A | 2 |
-| B | 3 |
-| C | 3 |
-| D | 2 |
-| E | 2 |
+Repository ini berisi kumpulan tugas Web Structure Mining yang mencakup analisis graf menggunakan NetworkX, perhitungan PageRank, web crawling antarwebsite, serta proyek Web Content Mining untuk klasifikasi berita Indonesia menggunakan metodologi CRISP-DM.
 
-- **Derajat rata-rata**: `2.4`
-- **Density**: `0.6` (6 dari 10 sisi maksimum)
-- **Rata-rata lintasan terpendek**: `1.4`
-- **Diameter**: `2`
-- **Rata-rata koefisien klasterisasi**: `0.333`
+\<p align="center">   \<img src="images/cover.png" alt="Web Structure Mining Cover" width="100%"> \</p>
 
-<details>
-<summary>Lihat koefisien klasterisasi tiap simpul</summary>
-
-| Simpul | C_i |
-|:---:|:---:|
-| A | 1.0000 |
-| B | 0.3333 |
-| C | 0.3333 |
-| D | 0.0000 |
-| E | 0.0000 |
-
-</details>
-
-<p align="center">
-  <img src="images/dist_degree_undirected.png" alt="Distribusi Derajat - Tak Berarah" width="400"/>
-</p>
+\<p align="center">   \<img src="[https://img.shields.io/badge/Python-3.10+-blue?logo=python](https://img.shields.io/badge/Python-3.10+-blue?logo=python)" alt="Python">   \<img src="[https://img.shields.io/badge/NetworkX-Graph%20Analysis-orange](https://img.shields.io/badge/NetworkX-Graph%20Analysis-orange)" alt="NetworkX">   \<img src="[https://img.shields.io/badge/Streamlit-Web%20Application-red?logo=streamlit](https://img.shields.io/badge/Streamlit-Web%20Application-red?logo=streamlit)" alt="Streamlit">   \<img src="[https://img.shields.io/badge/Jupyter-Notebook-orange?logo=jupyter](https://img.shields.io/badge/Jupyter-Notebook-orange?logo=jupyter)" alt="Jupyter">   \<img src="[https://img.shields.io/badge/License-MIT-green](https://img.shields.io/badge/License-MIT-green)" alt="MIT License"> \</p>
 
 ---
 
-### Graf Berarah (5 simpul, 7 busur)
+## 📌 About This Repository
 
-<p align="center">
-  <img src="images/graf_berarah.png" alt="Graf Berarah" width="350"/>
-</p>
+Repository ini berisi seluruh tugas mata kuliah Web Structure Mining yang dibagi menjadi dua bagian utama.
 
-| Simpul | In-degree | Out-degree | Total |
-|:---:|:---:|:---:|:---:|
-| A | 1 | 1 | 2 |
-| B | 1 | 2 | 3 |
-| C | 2 | 2 | 4 |
-| D | 2 | 1 | 3 |
-| E | 1 | 1 | 2 |
+### Part 1: Graph Analysis and PageRank
 
-- **Average in-degree**: `1.4`
-- **Average out-degree**: `1.4`
-- **Average total degree**: `2.8`
-- **Density**: `0.35` (7 dari 20 busur maksimum)
-- **Rata-rata lintasan terpendek**: `1.9`
-- **Rata-rata koefisien klasterisasi**: `0.383`
+Bagian pertama membahas konsep Web Structure Mining melalui tiga notebook Jupyter yang disusun secara bertahap.
 
-<p align="center">
-  <img src="images/dist_degree_directed.png" alt="Distribusi Derajat - Berarah" width="600"/>
-</p>
+Materi mencakup analisis graf berarah dan tak berarah, representasi graf, perhitungan metrik graf, serta implementasi algoritma PageRank.
+
+Bagian ini juga dilengkapi aplikasi Streamlit interaktif untuk melakukan web crawling dan analisis PageRank antarwebsite menggunakan data dari website nyata.
+
+### Part 2: Web Content Mining (PPW)
+
+Bagian kedua merupakan tugas mata kuliah Pencarian dan Penambangan Web (PPW) yang berfokus pada klasifikasi berita Indonesia ke dalam dua kategori, yaitu Sport dan Finance.
+
+Proyek ini mengikuti metodologi CRISP-DM, mulai dari crawling artikel detik.com, eksplorasi dataset, text preprocessing, vektorisasi menggunakan TF-IDF, PCA, SVD, dan Skip-gram, pemodelan Naive Bayes, evaluasi model, hingga deployment aplikasi klasifikasi berbasis Streamlit.
 
 ---
 
-### Tabel Perbandingan
+### Application Preview
 
-| Metrik | Tak Berarah | Berarah |
-|--------|:---:|:---:|
-| Jumlah simpul (N) | 5 | 5 |
-| Jumlah sisi (L) | 6 | 7 |
-| Derajat rata-rata | 2.4 | 2.8 |
-| Density | 0.6 | 0.35 |
-| Rata-rata lintasan terpendek | 1.4 | 1.9 |
-| Diameter | 2 | - |
-| Rata-rata koefisien klasterisasi | 0.333 | 0.383 |
+<p align="center">
+  <img
+    src="images/web-crawler-pagerank.png"
+    alt="WebRank Explorer - Web Crawler PageRank Analyzer"
+    width="100%"
+  >
+</p>
 
-<br>
+<p align="center">
+  <em>WebRank Explorer — Interactive Web Crawling and PageRank Analysis Interface</em>
+</p>
 
-## Struktur Folder
+## 📂 Repository Structure
 
+```text
+Web-Structure-Mining/
+│
+├── Analisis_Graf_NetworkX.ipynb
+├── Analisis_PageRank_4Node.ipynb
+├── Analisis_Crawl_PageRank.ipynb
+│
+├── README.md
+├── requirements.txt
+├── LICENSE
+├── .gitignore
+│
+├── docs/
+│   ├── index.html
+│   ├── notebook_graf.html
+│   ├── pagerank.html
+│   └── images/
+│
+├── images/
+│   ├── cover.png
+│   ├── graf_pagerank_viz.png
+│   ├── graf_tak_berarah.png
+│   ├── graf_berarah.png
+│   ├── dist_degree_undirected.png
+│   ├── dist_degree_directed.png
+│   └── pagerank_bar.png
+│
+├── web-crawler-pagerank/
+│   ├── app.py
+│   ├── crawler.py
+│   ├── graph_builder.py
+│   ├── database.py
+│   ├── requirements.txt
+│   ├── README.md
+│   └── exports/
+│
+└── ppw/
+    ├── CRISP-DM/
+    │   ├── Business.ipynb
+    │   ├── EDA.ipynb
+    │   ├── Input.ipynb
+    │   ├── Preprocessing.ipynb
+    │   ├── Preprocessing_Ablation.ipynb
+    │   ├── Vectorization.ipynb
+    │   ├── Skipgram.ipynb
+    │   ├── Modeling.ipynb
+    │   ├── Skipgram_Classification.ipynb
+    │   ├── Output.md
+    │   └── Production.md
+    │
+    ├── data/
+    ├── deployment/
+    ├── enWebminig/
+    ├── _config.yml
+    ├── _toc.yml
+    ├── intro.md
+    └── README.md
 ```
-analisis-graf-networkx/
-│
-├── Analisis_Graf_NetworkX.ipynb   # Notebook utama (sudah berisi output & grafik)
-├── README.md                       # Dokumentasi project (file ini)
-├── requirements.txt                # Daftar library yang dibutuhkan
-├── LICENSE                         # Lisensi MIT
-├── .gitignore                      # File yang diabaikan git
-│
-├── docs/                           # Untuk GitHub Pages
-│   └── index.html                  # Versi HTML statis notebook (live preview)
-│
-└── images/                         # Gambar untuk README & dokumentasi
-    ├── cover.png
-    ├── graf_tak_berarah.png
-    ├── graf_berarah.png
-    ├── dist_degree_undirected.png
-    └── dist_degree_directed.png
+
+### Directory Description
+
+| Directory / File                | Description                                          |
+| ------------------------------- | ---------------------------------------------------- |
+| `Analisis_Graf_NetworkX.ipynb`  | Notebook 1, analisis graf 5 simpul                   |
+| `Analisis_PageRank_4Node.ipynb` | Notebook 2, perhitungan PageRank 4 simpul            |
+| `Analisis_Crawl_PageRank.ipynb` | Notebook 3, web crawling dan PageRank                |
+| `docs/`                         | Dokumentasi statis untuk GitHub Pages                |
+| `images/`                       | Gambar dan visualisasi untuk dokumentasi             |
+| `web-crawler-pagerank/`         | Aplikasi web crawler dan PageRank berbasis Streamlit |
+| `ppw/`                          | Proyek Web Content Mining menggunakan CRISP-DM       |
+| `requirements.txt`              | Daftar dependencies utama                            |
+| `LICENSE`                       | Lisensi MIT                                          |
+
+---
+
+# Part 1: Graph Analysis and PageRank
+
+Bagian ini membahas analisis struktur hubungan antarwebsite menggunakan konsep graf dan algoritma PageRank.
+
+## 1. Notebook 1: Graph Analysis with NetworkX
+
+Notebook ini menganalisis dua jenis graf dengan masing-masing lima simpul, yaitu graf tak berarah (*Undirected Graph*) dan graf berarah (*Directed Graph*).
+
+**Topics Covered:**
+
+- Representasi graf menggunakan NetworkX.
+- Matriks ketetanggaan (*Adjacency Matrix*).
+- Perhitungan derajat simpul (*Degree*).
+- In-degree dan out-degree.
+- Distribusi derajat (*Degree Distribution*).
+- Derajat rata-rata (*Average Degree*).
+- Kepadatan graf (*Graph Density*).
+- Lintasan terpendek (*Shortest Path*).
+- Koefisien klasterisasi (*Clustering Coefficient*).
+
+### Visualizations
+
+\<p align="center">
+&#x20; \<img src="images/graf_tak_berarah.png" alt="Undirected Graph" width="48%">
+&#x20; \<img src="images/graf_berarah.png" alt="Directed Graph" width="48%">
+\</p>
+
+\<p align="center">
+&#x20; \<img src="images/dist_degree_undirected.png" alt="Undirected Degree Distribution" width="48%">
+&#x20; \<img src="images/dist_degree_directed.png" alt="Directed Degree Distribution" width="48%">
+\</p>
+
+## 2. Notebook 2: PageRank Analysis with 4 Nodes
+
+Notebook ini membangun graf berarah dengan empat simpul dan melakukan perhitungan PageRank untuk menentukan tingkat kepentingan masing-masing simpul.
+
+**Topics Covered:**
+
+- Konstruksi graf berarah dengan NetworkX.
+- Adjacency List.
+- Edge List.
+- Adjacency Matrix.
+- Incidence Matrix.
+- Perhitungan in-degree dan out-degree.
+- Implementasi iterasi manual algoritma PageRank.
+- Perhitungan PageRank menggunakan NetworkX.
+- Perbandingan hasil perhitungan.
+
+### PageRank Visualization
+
+\<p align="center">
+&#x20; \<img src="images/graf_pagerank_viz.png" alt="PageRank Graph Visualization" width="75%">
+\</p>
+
+### PageRank Results
+
+Berikut hasil perhitungan PageRank untuk empat simpul:
+
+| Node | In-degree | Out-degree | PageRank | Rank |
+| ---- | --------: | ---------: | -------: | ---: |
+| A    |         2 |          2 |   0.2781 |    2 |
+| B    |         1 |          1 |   0.1557 |    4 |
+| C    |         3 |          2 |   0.3710 |    1 |
+| D    |         1 |          2 |   0.1952 |    3 |
+
+\<badge color="success">Highest PageRank\</badge> **Node C** memperoleh skor PageRank tertinggi sebesar **0.3710**.
+
+### PageRank Formula
+
+Sumber: Bing Liu, *Web Data Mining*, Chapter 7.3.
+
+```text
+PR(i) = (1 - d) / N + d * Σ (PR(j) / D_out(j))
 ```
 
-<br>
+Keterangan:
 
-## Cara Menjalankan
+- `PR(i)` adalah skor PageRank simpul i.
+- `d` adalah damping factor dengan nilai default 0.85.
+- `N` adalah jumlah seluruh simpul.
+- `D_out(j)` adalah out-degree dari simpul j.
+- `PR(j)` adalah skor PageRank simpul j.
 
-### Opsi A Google Colab (paling gampang, tanpa install)
+## 3. Notebook 3: Web Crawling and PageRank
 
-1. Buka https://colab.research.google.com
-2. `File` > `Upload notebook`
-3. Pilih file `Analisis_Graf_NetworkX.ipynb`
-4. `Runtime` > `Run all`
+Notebook ini mendemonstrasikan proses web crawling untuk membangun directed graph berdasarkan hubungan tautan antarhalaman website nyata.
 
-### Opsi B Jupyter Notebook lokal
+Beberapa website yang digunakan sebagai seed URL antara lain:
+
+- [Wikipedia](https://www.wikipedia.org)
+- [GitHub](https://github.com)
+- [Universitas Trunojoyo Madura](https://trunojoyo.ac.id)
+
+**Workflow:**
+
+1. Menentukan seed URL.
+2. Mengambil konten HTML website.
+3. Mengekstraksi hyperlink.
+4. Mengidentifikasi hubungan antarwebsite.
+5. Membangun directed graph.
+6. Menghitung PageRank setiap website.
+7. Menganalisis website berdasarkan skor PageRank.
+
+---
+
+## 4. Web Crawler PageRank Analyzer
+
+\<badge color="success">Interactive Streamlit Application\</badge>
+
+Aplikasi web interaktif untuk melakukan crawling dan analisis PageRank antarwebsite secara real-time.
+
+**Key Features:**
+
+- Web crawler menggunakan BFS multi-level.
+- Thread pool untuk paralelisasi proses crawling.
+- Dukungan robots.txt.
+- `curl_cffi` sebagai HTTP backend dengan dukungan TLS fingerprint impersonation.
+- Visualisasi graph interaktif menggunakan PyVis dan vis.js.
+- Force-directed graph layout.
+- Top 10 website berdasarkan skor PageRank.
+- Tabel dan bar chart hasil PageRank.
+- Database SQLite untuk menyimpan riwayat crawling.
+- Export hasil analisis ke GraphML, JSON, dan CSV.
+
+**Project Location:**
+
+```text
+web-crawler-pagerank/
+```
+
+### How to Run
 
 ```bash
-# 1. Clone repo ini
-git clone https://github.com/haninhammoud01/analisis-graf-networkx.git
-cd analisis-graf-networkx
-
-# 2. Install dependency
+cd web-crawler-pagerank
 pip install -r requirements.txt
-
-# 3. Buka notebook
-jupyter notebook Analisis_Graf_NetworkX.ipynb
+streamlit run app.py
 ```
 
-> Output semua cell sudah ter-embed di dalam notebook, jadi langsung tampil sebagai web statis di GitHub tanpa perlu di-run ulang.
+Buka aplikasi melalui browser:
 
-<br>
-
-## Live Demo (GitHub Pages)
-
-Setelah mengaktifkan GitHub Pages (lihat [Cara Aktifkan GitHub Pages](#cara-aktifkan-github-pages)), notebook bisa diakses sebagai **web statis** di:
-
-```
-https://haninhammoud01.github.io/analisis-graf-networkx/
+```text
+http://localhost:8501
 ```
 
-Versi HTML statis (`docs/index.html`) sudah aku convert dari notebook asli semua output text, matriks, dan grafik tetap tampil tanpa perlu menjalankan kode. Cocok untuk dilihat dosen / orang lain yang belum install Python.
+Dokumentasi lengkap aplikasi tersedia di `web-crawler-pagerank/README.md`.
 
-<br>
+---
 
-## Cara Upload ke GitHub
+# Part 2: Web Content Mining (PPW)
 
-1. **Buat repo kosong** di https://github.com/new
-   - Repository name: `analisis-graf-networkx` (atau bebas)
-   - Public, **jangan** centang "Add a README" (kita sudah punya)
-   - Klik **Create repository**
+## Indonesian News Classification: Sport vs Finance
 
-2. **Dari terminal VSCode**, di dalam folder project:
+Proyek Web Content Mining ini dikembangkan sebagai tugas mata kuliah Pencarian dan Penambangan Web (PPW) dengan menggunakan metodologi **Cross-Industry Standard Process for Data Mining (CRISP-DM)**.
+
+Tujuan proyek adalah membangun sistem klasifikasi teks berita berbahasa Indonesia ke dalam dua kategori, yaitu Sport dan Finance.
+
+Dataset dikumpulkan dari artikel berita [detik.com](https://www.detik.com/) melalui proses web crawling.
+
+Proyek ini mengeksplorasi beberapa pendekatan representasi teks, termasuk TF-IDF, PCA, SVD, dan Skip-gram yang diimplementasikan secara manual.
+
+Model klasifikasi menggunakan Naive Bayes dan dilengkapi dengan proses hyperparameter tuning serta deployment aplikasi Streamlit.
+
+## Dataset Overview
+
+Dataset terdiri dari 200 artikel berita berbahasa Indonesia.
+
+| Category  | Number of Articles | ID Range  |
+| --------- | -----------------: | --------- |
+| Sport     |                100 | 1-100     |
+| Finance   |                100 | 101-200   |
+| **Total** |            **200** | **1-200** |
+
+**Dataset Columns:**
+
+| Column       | Description                         |
+| ------------ | ----------------------------------- |
+| `id`         | Identitas unik artikel              |
+| `isi_berita` | Konten teks artikel berita          |
+| `label`      | Kategori berita, Sport atau Finance |
+| `url`        | Sumber URL artikel                  |
+
+## CRISP-DM Methodology
+
+Proyek ini mengikuti enam tahapan utama CRISP-DM.
+
+### 1. Business Understanding
+
+Mengidentifikasi permasalahan klasifikasi berita Indonesia dan menentukan tujuan serta kriteria keberhasilan proyek.
+
+Notebook: `Business.ipynb`
+
+### 2. Data Understanding
+
+Melakukan eksplorasi awal terhadap 200 artikel berita yang telah dikumpulkan.
+
+Analisis mencakup distribusi kategori, karakteristik dataset, dan pemeriksaan kualitas data.
+
+Notebook: `EDA.ipynb`
+
+### 3. Data Preparation
+
+Tahapan persiapan data meliputi:
+
+- Web crawling dan pengumpulan artikel berita.
+- Ekstraksi konten artikel.
+- Pelabelan kategori berita.
+- Text preprocessing.
+- Perbandingan tahapan preprocessing melalui ablation study.
+- Ekstraksi fitur menggunakan TF-IDF.
+- Dimensionality reduction menggunakan PCA dan SVD.
+- Implementasi word embedding menggunakan Skip-gram secara manual.
+
+**Related Notebooks:**
+
+| Notebook                       | Description                                         |
+| ------------------------------ | --------------------------------------------------- |
+| `Input.ipynb`                  | Crawling dan pengumpulan dataset                    |
+| `Preprocessing.ipynb`          | Text preprocessing                                  |
+| `Preprocessing_Ablation.ipynb` | Perbandingan tahapan preprocessing                  |
+| `Vectorization.ipynb`          | TF-IDF, PCA, dan SVD                                |
+| `Skipgram.ipynb`               | Implementasi Skip-gram manual dengan demo 3 kalimat |
+
+### 4. Modeling
+
+Melakukan pemodelan klasifikasi berita menggunakan algoritma Naive Bayes.
+
+Eksperimen dilakukan dengan beberapa representasi fitur:
+
+- TF-IDF.
+- PCA.
+- SVD.
+- Skip-gram.
+
+Perbandingan Skip-gram dan TF-IDF dilengkapi dengan Grid Search untuk mengeksplorasi konfigurasi model.
+
+**Related Notebooks:**
+
+- `Modeling.ipynb`
+- `Skipgram_Classification.ipynb`
+
+### 5. Evaluation
+
+Mengevaluasi performa model berdasarkan hasil eksperimen menggunakan berbagai representasi fitur.
+
+Tahap ini bertujuan membandingkan hasil klasifikasi dan menentukan model dengan performa terbaik berdasarkan metrik evaluasi.
+
+Notebook: `Output.md`
+
+### 6. Deployment
+
+Mengimplementasikan model klasifikasi ke dalam aplikasi web menggunakan Streamlit.
+
+Aplikasi memungkinkan pengguna melakukan klasifikasi berita berdasarkan URL artikel dari detik.com.
+
+Dokumentasi: `Production.md`
+
+---
+
+## 🚀 Running the PPW Application
+
+Untuk menjalankan aplikasi klasifikasi berita:
+
+**1. Masuk ke direktori PPW**
+
 ```bash
-git init
-git branch -M main
-git add .
-git commit -m "Initial commit: Tugas Web Structure Mining - Analisis Graf dengan NetworkX"
-git remote add origin https://github.com/haninhammoud01/analisis-graf-networkx.git
-git push -u origin main
+cd ppw
 ```
 
-3. Saat `git push`, GitHub akan minta login:
-   - **Browser**: otomatis kebuka, login aja
-   - **Token**: bikin PAT di https://github.com/settings/tokens (scope: `repo`), paste sebagai password
+**2. Install dependencies**
 
-<br>
-
-## Cara Aktifkan GitHub Pages
-
-Setelah repo ter-upload lengkap (termasuk folder `docs/`), aktifkan Pages supaya notebook tampil sebagai web statis:
-
-1. Buka repo kamu di GitHub → klik tab **Settings** (bukan Settings di profil, tapi di menu repo bagian atas)
-2. Sidebar kiri → **Pages**
-3. Pada section **Build and deployment**:
-   - **Source**: pilih **Deploy from a branch**
-   - **Branch**: pilih `main`, folder: `/docs`
-   - Klik **Save**
-4. Tunggu 1-2 menit, lalu refresh halaman akan muncul link:
-   ```
-   https://haninhammoud01.github.io/analisis-graf-networkx/
-   ```
-5. Buka link itu di browser → notebook akan tampil sebagai halaman web lengkap dengan output, matriks, dan grafik.
-
-> **Catatan**: GitHub Pages butuh waktu ~1-2 menit untuk build pertama kali. Kalau muncul "404 There isn't a GitHub Pages site here", tunggu dulu lalu refresh.
-
-<br>
-
-## Library yang Dipakai
-
-```txt
-networkx==3.x
-matplotlib==3.x
-numpy==1.x
-jupyter
+```bash
+pip install -r requirements.txt
 ```
 
-Semua library ini sudah pre-installed di Google Colab, jadi cukup buka notebook-nya langsung jalan.
+**3. Jalankan aplikasi Streamlit**
 
-<br>
+```bash
+streamlit run deployment/app.py
+```
 
-## Referensi
+Aplikasi dapat diakses melalui browser pada alamat:
 
-1. **PPT Dosen *Web Structure Mining***. Bab *Mendeskripsikan Graf: Terminologi dan Metrik* definisi graf, matriks ketetanggaan, derajat (in-degree/out-degree), distribusi derajat, derajat rata-rata, kepadatan graf, koefisien klasterisasi, lintasan, jalur terpendek, diameter.
-2. **Bing Liu *Web Data Mining***, Chapter 7 (referensi yang disebut di PPT untuk PageRank & rank prestise).
-3. NetworkX Documentation https://networkx.org/documentation/stable/
-4. Hagberg, Aric, Daniel Schult, and Pieter Swart. *Exploring Network Structure, Dynamics, and Function using NetworkX*. SciPy 2008.
-5. Fagiolo, G. *Clustering in complex directed networks*. Physical Review E, 76(2), 026107, 2007 (rumus clustering coefficient untuk graf berarah yang dipakai NetworkX).
+```text
+http://localhost:8501
+```
 
-<br>
+---
 
-<div align="center">
+## 🌐 Live Demo and Documentation
 
-### Dibuat untuk Tugas Web Structure Mining
+Notebook untuk Bagian 1, yaitu Analisis Graf dan PageRank, tersedia dalam bentuk dokumentasi web statis melalui GitHub Pages.
 
-**Mata Kuliah**: Web Structure Mining
-**Tools**: Python, NetworkX, Jupyter Notebook, Google Colab
+\<p align="center">
+&#x20; \<a href="[https://haninhammoud01.github.io/analisis-graf-networkx/](https://haninhammoud01.github.io/analisis-graf-networkx/)">
+&#x20;   \<img src="[https://img.shields.io/badge/Explore-Live%20Documentation-blue?style=for-the-badge&logo=github](https://img.shields.io/badge/Explore-Live%20Documentation-blue?style=for-the-badge\&logo=github)" alt="Live Documentation">
+&#x20; \</a>
+\</p>
 
-</div>
+**Live Documentation:**
+
+[https://haninhammoud01.github.io/analisis-graf-networkx/](https://haninhammoud01.github.io/analisis-graf-networkx/)
+
+Dokumentasi mencakup landing page, notebook analisis graf, dan notebook PageRank dalam format HTML.
+
+---
+
+## 💻 Running the Notebooks
+
+Terdapat dua alternatif untuk menjalankan notebook Jupyter.
+
+### Option 1: Google Colab
+
+Jalankan notebook tanpa instalasi environment lokal.
+
+1. Buka [Google Colab](https://colab.research.google.com).
+2. Pilih **File > Upload notebook**.
+3. Pilih notebook yang ingin dijalankan.
+4. Sesuaikan runtime jika diperlukan.
+5. Pilih **Runtime > Run all** untuk menjalankan seluruh cell.
+
+### Option 2: Local Jupyter Notebook
+
+**1. Clone repository**
+
+```bash
+git clone https://github.com/haninhammoud01/analisis-graf-networkx.git
+```
+
+**2. Masuk ke direktori repository**
+
+```bash
+cd analisis-graf-networkx
+```
+
+**3. Install dependencies**
+
+```bash
+pip install -r requirements.txt
+```
+
+**4. Jalankan Jupyter Notebook**
+
+```bash
+jupyter notebook
+```
+
+---
+
+## 📖 Theoretical Concepts
+
+### 1. Web Mining
+
+Web Mining merupakan proses penerapan teknik data mining untuk menemukan pola, informasi, dan pengetahuan yang berguna dari data web.
+
+Web Mining terbagi menjadi tiga kategori utama.
+
+| Category             | Description                                                              | Implementation                      |
+| -------------------- | ------------------------------------------------------------------------ | ----------------------------------- |
+| Web Content Mining   | Mengekstraksi informasi dari konten halaman web, seperti teks dan gambar | Part 2: PPW                         |
+| Web Structure Mining | Menganalisis struktur hubungan hyperlink antarhalaman web                | Part 1: Graph Analysis and PageRank |
+| Web Usage Mining     | Mempelajari pola perilaku pengguna berdasarkan log aktivitas website     | Theoretical Study                   |
+
+### 2. PageRank
+
+PageRank merupakan algoritma yang diperkenalkan oleh Larry Page dan Sergey Brin untuk mengukur tingkat kepentingan halaman web berdasarkan struktur tautan.
+
+Prinsip dasarnya adalah halaman yang menerima tautan dari banyak halaman penting berpotensi memiliki nilai PageRank yang tinggi.
+
+PageRank juga berkaitan dengan konsep Prestige Rank dalam materi Web Structure Mining.
+
+Konsep yang dipelajari meliputi:
+
+- **Degree Prestige:** Mengukur prestise berdasarkan jumlah tautan masuk.
+- **Proximity Prestige:** Mempertimbangkan kedekatan simpul terhadap simpul pemberi pengaruh.
+- **Rank Prestige:** Mempertimbangkan tingkat prestise dari simpul yang memberikan tautan.
+- **PageRank:** Mengembangkan konsep Rank Prestige dengan damping factor dan penanganan dangling nodes.
+
+### 3. Directed Graph
+
+Directed Graph atau graf berarah digunakan untuk merepresentasikan hubungan tautan antarwebsite.
+
+| Component | Description                                     |
+| --------- | ----------------------------------------------- |
+| Node      | Website atau subdomain                          |
+| Edge      | Tautan dari satu website menuju website lainnya |
+| Weight    | Jumlah tautan dari website A menuju website B   |
+
+Setiap subdomain diperlakukan sebagai node yang berbeda.
+
+Contoh:
+
+```text
+en.wikipedia.org != fr.wikipedia.org
+```
+
+---
+
+## 🛠️ Technologies and Tools
+
+### Part 1: Graph Analysis and PageRank
+
+| Technology       | Usage                                            |
+| ---------------- | ------------------------------------------------ |
+| Python 3.10+     | Bahasa pemrograman utama                         |
+| NetworkX         | Konstruksi dan analisis graf                     |
+| Streamlit        | Pengembangan aplikasi web                        |
+| PyVis (vis.js)   | Visualisasi graf interaktif                      |
+| curl_cffi        | HTTP client dengan TLS fingerprint impersonation |
+| BeautifulSoup4   | Parsing dokumen HTML                             |
+| Pandas           | Manipulasi data tabular                          |
+| NumPy            | Komputasi numerik                                |
+| SQLite           | Penyimpanan riwayat crawling                     |
+| Jupyter Notebook | Eksperimen dan analisis interaktif               |
+
+### Part 2: Web Content Mining (PPW)
+
+| Technology   | Usage                                          |
+| ------------ | ---------------------------------------------- |
+| Python 3.10+ | Bahasa pemrograman utama                       |
+| Trafilatura  | Ekstraksi teks artikel berita                  |
+| Pandas       | Manipulasi dataset                             |
+| scikit-learn | TF-IDF, PCA, SVD, Naive Bayes, dan Grid Search |
+| NumPy        | Komputasi numerik                              |
+| Streamlit    | Deployment aplikasi klasifikasi                |
+| Jupyter Book | Dokumentasi proyek                             |
+
+---
+
+## 📚 References
+
+1. Materi Perkuliahan, *Web Structure Mining*, Bab Mendeskripsikan Graf dan Prestise.
+2. Liu, B. *Web Data Mining*, Chapter 7.3, PageRank.
+3. Page, L., Brin, S., Motwani, R., & Winograd, T. (1999). *The PageRank Citation Ranking: Bringing Order to the Web*. Technical Report, Stanford InfoLab.
+
+### Official Documentation
+
+- [NetworkX Documentation](https://networkx.org/documentation/stable/)
+- [Streamlit Documentation](https://docs.streamlit.io/)
+- [PyVis Documentation](https://pyvis.readthedocs.io/)
+- [curl_cffi Documentation](https://curl-cffi.readthedocs.io/)
+- [scikit-learn Documentation](https://scikit-learn.org/)
+- [Trafilatura Documentation](https://trafilatura.readthedocs.io/)
+- [Jupyter Book Documentation](https://jupyterbook.org/)
+- [BeautifulSoup Documentation](https://www.crummy.com/software/BeautifulSoup/bs4/doc/)
+
+---
+
+## 📄 License
+
+This project is licensed under the [MIT License](LICENSE).
+
+---
+
+\<div align="center">
+
+**Hanin Hammoud**
+
+Teknik Informatika
+Universitas Trunojoyo Madura
+
+*Exploring Web Mining through Graph Analysis, PageRank, and Text Classification.*
+
+\</div>
+

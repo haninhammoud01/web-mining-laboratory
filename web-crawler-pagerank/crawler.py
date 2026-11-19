@@ -98,34 +98,29 @@ def normalize_url(url: str) -> str:
 
 
 def get_domain(url: str) -> str:
-    """Ambil domain level-2 dari URL.
+    """Ambil 'website' dari URL = subdomain penuh (tanpa path, query, fragment).
 
-    Mendukung TLD Indonesia (ac.id, co.id, or.id, go.id, sch.id, web.id, mil.id, net.id)
-    yang punya 3 level. Untuk TLD internasional (.com, .org, .net), ambil 2 level.
+    Setiap subdomain diperlakukan sebagai website terpisah. Contoh:
+    - en.wikipedia.org -> en.wikipedia.org (website A)
+    - fr.wikipedia.org -> fr.wikipedia.org (website B)
+    - trunojoyo.ac.id -> trunojoyo.ac.id (website C)
+    - ft.trunojoyo.ac.id -> ft.trunojoyo.ac.id (website D, beda dari C)
 
-    Contoh:
-        get_domain("https://ft.trunojoyo.ac.id/page") -> "trunojoyo.ac.id"
-        get_domain("https://github.com/user/repo")    -> "github.com"
-        get_domain("https://www.example.com")         -> "example.com"
+    Ini sesuai dengan konsep "website" di referensi: setiap subdomain
+    punya struktur & konten sendiri, sehingga wajar diperlakukan terpisah.
 
     Args:
         url: URL yang sudah ternormalisasi.
 
     Returns:
-        Domain dasar, atau string kosong jika tidak terdeteksi.
+        Subdomain penuh (tanpa port, path, atau www prefix).
     """
     parsed = urlparse(url)
     netloc = parsed.netloc.split(":")[0]
-    # Strip "www." prefix
+    # Strip "www." prefix supaya www.wikipedia.org == wikipedia.org
     if netloc.startswith("www."):
         netloc = netloc[4:]
-    parts = netloc.split(".")
-    if len(parts) >= 3 and parts[-2] in ID_SECOND_LEVEL and parts[-1] == "id":
-        # Indonesian 3-level TLD (ac.id, co.id, etc.)
-        return ".".join(parts[-3:])
-    # Generic 2-level TLD
-    match = DOMAIN_RE_GENERIC.search(netloc)
-    return match.group(1) if match else netloc
+    return netloc if netloc else ""
 
 
 def is_same_domain(url: str, seed_domain: str) -> bool:
