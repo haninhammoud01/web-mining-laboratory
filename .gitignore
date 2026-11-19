@@ -51,3 +51,9 @@ Thumbs.db
 # Output dari notebook (kalau di-run lokal, gambar akan tersimpan di sini)
 *.png
 !images/*.png
+!docs/images/*.png
+
+# Web crawler artifacts
+web-crawler-pagerank/crawl_history.db
+web-crawler-pagerank/exports/*
+!web-crawler-pagerank/exports/.gitkeep

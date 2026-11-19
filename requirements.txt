@@ -1,8 +1,14 @@
-# Library yang dibutuhkan untuk menjalankan notebook
-# Install dengan: pip install -r requirements.txt
-
+# Analisis graf
 networkx>=3.0
 matplotlib>=3.5
 numpy>=1.20
 pandas>=1.5
+
+# Jupyter
 jupyter>=1.0
+
+# Web crawler & Streamlit app
+streamlit>=1.30
+requests>=2.28
+beautifulsoup4>=4.11
+pyvis>=0.3
