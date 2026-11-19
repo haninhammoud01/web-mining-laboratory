@@ -1,26 +1,24 @@
-# Web Structure Mining
-
 <p align="center">
   <strong>Tugas Mata Kuliah Web Structure Mining</strong>
 </p>
 
 <p align="center">
-  <img
-    src="images/cover.jpg"
-    alt="Web Structure Mining Cover"
-    width="100%"
-  >
+  <img src="images/cover.jpg" alt="Web Structure Mining Cover" width="100%">
 </p>
 
-Repository ini berisi kumpulan tugas Web Structure Mining yang mencakup analisis graf menggunakan NetworkX, perhitungan PageRank, web crawling antarwebsite, serta proyek Web Content Mining untuk klasifikasi berita Indonesia menggunakan metodologi CRISP-DM.
-
-\<p align="center">   \<img src="images/cover.png" alt="Web Structure Mining Cover" width="100%"> \</p>
-
-\<p align="center">   \<img src="[https://img.shields.io/badge/Python-3.10+-blue?logo=python](https://img.shields.io/badge/Python-3.10+-blue?logo=python)" alt="Python">   \<img src="[https://img.shields.io/badge/NetworkX-Graph%20Analysis-orange](https://img.shields.io/badge/NetworkX-Graph%20Analysis-orange)" alt="NetworkX">   \<img src="[https://img.shields.io/badge/Streamlit-Web%20Application-red?logo=streamlit](https://img.shields.io/badge/Streamlit-Web%20Application-red?logo=streamlit)" alt="Streamlit">   \<img src="[https://img.shields.io/badge/Jupyter-Notebook-orange?logo=jupyter](https://img.shields.io/badge/Jupyter-Notebook-orange?logo=jupyter)" alt="Jupyter">   \<img src="[https://img.shields.io/badge/License-MIT-green](https://img.shields.io/badge/License-MIT-green)" alt="MIT License"> \</p>
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.10+-blue?logo=python" alt="Python">
+  <img src="https://img.shields.io/badge/NetworkX-Graph%20Analysis-orange" alt="NetworkX">
+  <img src="https://img.shields.io/badge/Streamlit-Web%20Application-red?logo=streamlit" alt="Streamlit">
+  <img src="https://img.shields.io/badge/Jupyter-Notebook-orange?logo=jupyter" alt="Jupyter">
+  <img src="https://img.shields.io/badge/License-MIT-green" alt="MIT License">
+</p>
 
 ---
 
 ## 📌 About This Repository
+
+Repository ini berisi kumpulan tugas Web Structure Mining yang mencakup analisis graf menggunakan NetworkX, perhitungan PageRank, web crawling antarwebsite, serta proyek Web Content Mining untuk klasifikasi berita Indonesia menggunakan metodologi CRISP-DM.
 
 Repository ini berisi seluruh tugas mata kuliah Web Structure Mining yang dibagi menjadi dua bagian utama.
 
@@ -51,7 +49,7 @@ Proyek ini mengikuti metodologi CRISP-DM, mulai dari crawling artikel detik.com,
 </p>
 
 <p align="center">
-  <em>WebRank Explorer — Interactive Web Crawling and PageRank Analysis Interface</em>
+  <em>WebRank Explorer - Interactive Web Crawling and PageRank Analysis Interface</em>
 </p>
 
 ## 📂 Repository Structure
