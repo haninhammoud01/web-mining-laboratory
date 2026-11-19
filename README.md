@@ -151,15 +151,15 @@ Notebook ini menganalisis dua jenis graf dengan masing-masing lima simpul, yaitu
 
 ### Visualizations
 
-\<p align="center">
-&#x20; \<img src="images/graf_tak_berarah.png" alt="Undirected Graph" width="48%">
-&#x20; \<img src="images/graf_berarah.png" alt="Directed Graph" width="48%">
-\</p>
+<p align="center">
+&#x20; <img src="images/graf_tak_berarah.png" alt="Undirected Graph" width="48%">
+&#x20; <img src="images/graf_berarah.png" alt="Directed Graph" width="48%">
+</p>
 
-\<p align="center">
-&#x20; \<img src="images/dist_degree_undirected.png" alt="Undirected Degree Distribution" width="48%">
-&#x20; \<img src="images/dist_degree_directed.png" alt="Directed Degree Distribution" width="48%">
-\</p>
+<p align="center">
+&#x20; <img src="images/dist_degree_undirected.png" alt="Undirected Degree Distribution" width="48%">
+&#x20; <img src="images/dist_degree_directed.png" alt="Directed Degree Distribution" width="48%">
+</p>
 
 ## 2. Notebook 2: PageRank Analysis with 4 Nodes
 
@@ -179,9 +179,9 @@ Notebook ini membangun graf berarah dengan empat simpul dan melakukan perhitunga
 
 ### PageRank Visualization
 
-\<p align="center">
-&#x20; \<img src="images/graf_pagerank_viz.png" alt="PageRank Graph Visualization" width="75%">
-\</p>
+<p align="center">
+  <img src="images/graf_pagerank_viz.png" alt="PageRank Graph Visualization" width="85%">
+</p>
 
 ### PageRank Results
 
@@ -194,7 +194,7 @@ Berikut hasil perhitungan PageRank untuk empat simpul:
 | C    |         3 |          2 |   0.3710 |    1 |
 | D    |         1 |          2 |   0.1952 |    3 |
 
-\<badge color="success">Highest PageRank\</badge> **Node C** memperoleh skor PageRank tertinggi sebesar **0.3710**.
+<badge color="success">Highest PageRank</badge> **Node C** memperoleh skor PageRank tertinggi sebesar **0.3710**.
 
 ### PageRank Formula
 
@@ -236,7 +236,7 @@ Beberapa website yang digunakan sebagai seed URL antara lain:
 
 ## 4. Web Crawler PageRank Analyzer
 
-\<badge color="success">Interactive Streamlit Application\</badge>
+<badge color="success">Interactive Streamlit Application</badge>
 
 Aplikasi web interaktif untuk melakukan crawling dan analisis PageRank antarwebsite secara real-time.
 
