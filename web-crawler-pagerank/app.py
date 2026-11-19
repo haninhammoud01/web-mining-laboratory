@@ -2,7 +2,6 @@
 Streamlit app: Web Crawler + PageRank antarwebsite.
 Jalankan lokal:  streamlit run app.py
 
-Tampilan minimalis aesthetic dengan tema teal-emerald (berbeda dari referensi).
 """
 
 from __future__ import annotations
