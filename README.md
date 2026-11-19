@@ -421,11 +421,14 @@ http://localhost:8501
 
 Notebook untuk Bagian 1, yaitu Analisis Graf dan PageRank, tersedia dalam bentuk dokumentasi web statis melalui GitHub Pages.
 
-\<p align="center">
-&#x20; \<a href="[https://haninhammoud01.github.io/analisis-graf-networkx/](https://haninhammoud01.github.io/analisis-graf-networkx/)">
-&#x20;   \<img src="[https://img.shields.io/badge/Explore-Live%20Documentation-blue?style=for-the-badge&logo=github](https://img.shields.io/badge/Explore-Live%20Documentation-blue?style=for-the-badge\&logo=github)" alt="Live Documentation">
-&#x20; \</a>
-\</p>
+<p align="center">
+  <a href="https://haninhammoud01.github.io/web-mining-laboratory/">
+    <img
+      src="https://img.shields.io/badge/Explore-Live%20Documentation-blue?style=for-the-badge&logo=github"
+      alt="Live Documentation"
+    >
+  </a>
+</p>
 
 **Live Documentation:**
 
@@ -582,14 +585,13 @@ This project is licensed under the [MIT License](LICENSE).
 
 ---
 
-\<div align="center">
+<div align="center">
 
 **Hanin Hammoud**
 
-Teknik Informatika
+Teknik Informatika  
 Universitas Trunojoyo Madura
 
 *Exploring Web Mining through Graph Analysis, PageRank, and Text Classification.*
 
-\</div>
-
+</div>
