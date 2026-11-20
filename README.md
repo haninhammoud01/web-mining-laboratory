@@ -432,7 +432,7 @@ Notebook untuk Bagian 1, yaitu Analisis Graf dan PageRank, tersedia dalam bentuk
 
 **Live Documentation:**
 
-[https://haninhammoud01.github.io/analisis-graf-networkx/](https://haninhammoud01.github.io/analisis-graf-networkx/)
+[https://haninhammoud01.github.io/analisis-graf-networkx/](https://haninhammoud01.github.io/web-mining-laboratory/)
 
 Dokumentasi mencakup landing page, notebook analisis graf, dan notebook PageRank dalam format HTML.
 
